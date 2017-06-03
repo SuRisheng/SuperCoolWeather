@@ -2,6 +2,7 @@ package com.srs.supercoolweather.fragment;
 
 import android.app.Fragment;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -15,6 +16,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.srs.supercoolweather.R;
+import com.srs.supercoolweather.WeatherActivity;
 import com.srs.supercoolweather.db.City;
 import com.srs.supercoolweather.db.County;
 import com.srs.supercoolweather.db.Province;
@@ -86,6 +88,8 @@ public class ChooseAreaFragment extends Fragment{
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
+        mOnDataLevelChange.dataLevelChange(mCurrentLevel);
         mList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -95,6 +99,13 @@ public class ChooseAreaFragment extends Fragment{
                 }else if (mCurrentLevel == LEVEL_CITY){
                     mSelectedCity = mCityList.get(position);
                     queryCounties();
+                }else if (mCurrentLevel == LEVEL_COUNTY){
+                    String weatherId = mCountyList.get(position)
+                                                  .getWeatherId();
+                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                    intent.putExtra("weather_id",weatherId);
+                    startActivity(intent);
+                    getActivity().finish();
                 }
             }
         });
@@ -115,7 +126,7 @@ public class ChooseAreaFragment extends Fragment{
 
 
     /*查询所有省份*/
-    private void queryProvinces(){
+    public void queryProvinces(){
         mTitle.setText("中国");
         mBack.setVisibility(View.GONE);
         mProvinceList = DataSupport.findAll(Province.class);
@@ -127,6 +138,7 @@ public class ChooseAreaFragment extends Fragment{
             mAdapter.notifyDataSetChanged();
             mList.setSelection(0);
             mCurrentLevel = LEVEL_PROVINCE;
+            setCurrentLevel();
         }else{
             String address = "http://guolin.tech/api/china";
             queryFromServer(address,"province");
@@ -183,7 +195,7 @@ public class ChooseAreaFragment extends Fragment{
     }
 
     /*查询区*/
-    private void queryCounties() {
+    public void queryCounties() {
         mTitle.setText(mSelectedCity.getCityName());
         mBack.setVisibility(View.VISIBLE);
         mCountyList = DataSupport.where("cityId = ?",String.valueOf(mSelectedCity.getId())).find(County.class);
@@ -195,6 +207,7 @@ public class ChooseAreaFragment extends Fragment{
             mAdapter.notifyDataSetChanged();
             mList.setSelection(0);
             mCurrentLevel = LEVEL_COUNTY;
+            setCurrentLevel();
         }else{
             int provinceCode = mSelectedProvince.getProvinceCode();
             int cityCode = mSelectedCity.getCityCode();
@@ -204,7 +217,7 @@ public class ChooseAreaFragment extends Fragment{
     }
 
     /*查询市*/
-    private void queryCities() {
+    public void queryCities() {
         mTitle.setText(mSelectedProvince.getProvinceName());
         mBack.setVisibility(View.VISIBLE);
         mCityList = DataSupport.where("provinceId = ? ",String.valueOf(mSelectedProvince.getId())).find(City.class);
@@ -216,7 +229,7 @@ public class ChooseAreaFragment extends Fragment{
             mAdapter.notifyDataSetChanged();
             mList.setSelection(0);
             mCurrentLevel = LEVEL_CITY;
-
+            setCurrentLevel();
         }else{
             int    provinceCode = mSelectedProvince.getProvinceCode();
             String address = "http://guolin.tech/api/china/" + provinceCode;
@@ -239,5 +252,18 @@ public class ChooseAreaFragment extends Fragment{
         mProgressDialog.show();
     }
 
+    private void setCurrentLevel(){
+        if (mOnDataLevelChange!= null)
+            mOnDataLevelChange.dataLevelChange(mCurrentLevel);
+    }
 
+    private OnDataLevelChange mOnDataLevelChange;
+
+    public interface OnDataLevelChange{
+        void dataLevelChange(int level);
+    }
+
+    public void setOnDataLevelChange(OnDataLevelChange onDataLevelChange){
+        mOnDataLevelChange = onDataLevelChange;
+    }
 }
