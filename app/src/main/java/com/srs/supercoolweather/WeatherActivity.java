@@ -5,10 +5,13 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -43,8 +46,10 @@ public class WeatherActivity
     private TextView mCarWashText;
     private TextView mSportText;
     private ImageView mBg;
-    private SwipeRefreshLayout mRefreshLayout;
+    public SwipeRefreshLayout mRefreshLayout;
     private String mWeatherId;
+    private Button mNavButton;
+    public DrawerLayout mDrawerLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +66,13 @@ public class WeatherActivity
             @Override
             public void onRefresh() {
                 requestWeather(mWeatherId);
+            }
+        });
+
+        mNavButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDrawerLayout.openDrawer(GravityCompat.START);
             }
         });
     }
@@ -143,11 +155,13 @@ public class WeatherActivity
         mSportText = (TextView) findViewById(R.id.sport_text);
         mBg = (ImageView) findViewById(R.id.bing_pic_img);
         mRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
+        mNavButton = (Button) findViewById(R.id.nav_button);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_lauout);
         mRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
     }
 
     /*根据天气id请求城市天气信息*/
-    private void requestWeather(String weatherId) {
+    public void requestWeather(String weatherId) {
         String weatherUrl = "http://guolin.tech/api/weather?cityid=" + weatherId + "&key=06b7cc9fdcf94a4ba626f4788901f824";
         Httputil.sendOkHttpRequest(weatherUrl, new Callback() {
             @Override
